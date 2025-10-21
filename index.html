@@ -1,12 +1,144 @@
-<html>
-  <head>
-   <script>
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("key") !== "ThickThighsUwU69!") {
-    document.write("<h1>Welcome Master</h1>");
-    throw new Error("Wrong key");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesh Control Dashboard</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background: #0b0c10;
+    color: #c5c6c7;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
-     async function updateNodes() {
+  header {
+    background: #1f2833;
+    padding: 1em 2em;
+    text-align: center;
+    color: #66fcf1;
+    font-size: 1.8em;
+    letter-spacing: 1px;
+  }
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5em;
+    padding: 2em;
+    flex: 1;
+  }
+  section {
+    background: #1f2833;
+    border-radius: 12px;
+    padding: 1em;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+  h2 {
+    color: #45a29e;
+    font-size: 1.2em;
+    margin-top: 0;
+    border-bottom: 1px solid #45a29e;
+    padding-bottom: 0.5em;
+  }
+  footer {
+    text-align: center;
+    padding: 0.5em;
+    background: #1f2833;
+    color: #45a29e;
+    font-size: 0.9em;
+  }
+  .feed {
+    background: #000;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    border-radius: 8px;
+  }
+  .status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+  }
+  .status-item {
+    background: #0b0c10;
+    padding: 0.6em;
+    border-radius: 8px;
+    font-size: 0.95em;
+  }
+  .ok { color: #66fcf1; }
+  .warn { color: #f5a623; }
+  .err { color: #ff4d4d; }
+
+  #map { height: 180px; border-radius: 8px; }
+</style>
+
+<!-- Password prompt -->
+<script>
+const password = prompt("Enter password:");
+if (password !== "ThickThighsUwU69!") {
+  document.write("<h1 style='text-align:center;color:red;'>Access Denied</h1><p style='text-align:center;'>Wrong password</p>");
+  throw new Error("Wrong password");
+}
+</script>
+</head>
+<body>
+
+<header>🛰 Mesh Control Dashboard</header>
+
+<main>
+  <!-- Mesh Node Status -->
+  <section>
+    <h2>📡 Network Overview</h2>
+    <div id="node-status" class="status">
+      <div class="status-item">Loading...</div>
+    </div>
+  </section>
+
+  <!-- CCTV Feed -->
+  <section>
+    <h2>🎥 CCTV / Camera Feed</h2>
+    <div class="feed">
+      <iframe src="http://172.30.77.134:8081" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+  </section>
+
+  <!-- System Info -->
+  <section>
+    <h2>💻 System Info</h2>
+    <div class="status">
+      <div class="status-item">CPU Usage: 14%</div>
+      <div class="status-item">RAM Usage: 1.8GB / 8GB</div>
+      <div class="status-item">Storage Free: 35GB</div>
+      <div class="status-item">Network: Bridged (LAN)</div>
+    </div>
+  </section>
+
+  <!-- Mesh Map -->
+  <section>
+    <h2>🗺 Mesh Map</h2>
+    <div id="map"></div>
+  </section>
+</main>
+
+<footer>Mesh Dashboard v0.1 — Offline Mode</footer>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// ------------------------
+// Mesh Node Status Update
+// ------------------------
+async function updateNodes() {
   try {
     const res = await fetch('http://172.30.77.134:5000/nodes.json');
     const data = await res.json();
@@ -28,113 +160,19 @@
 
 updateNodes();
 setInterval(updateNodes, 10000); // refresh every 10 seconds
+
+// ------------------------
+// Leaflet Map Setup
+// ------------------------
+const map = L.map('map').setView([0,0], 2); // default global view
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Example node markers (replace with your real locations)
+L.marker([37.7749, -122.4194]).addTo(map).bindPopup("Gateway Dell");
+L.marker([37.7750, -122.4180]).addTo(map).bindPopup("Vortex J24");
+L.marker([37.7755, -122.4170]).addTo(map).bindPopup("Samsung A10e");
 </script>
-    <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mesh Control Dashboard</title>
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #0b0c10;
-      color: #c5c6c7;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    header {
-      background: #1f2833;
-      padding: 1em 2em;
-      text-align: center;
-      color: #66fcf1;
-      font-size: 1.8em;
-      letter-spacing: 1px;
-    }
-    main {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5em;
-      padding: 2em;
-      flex: 1;
-    }
-    section {
-      background: #1f2833;
-      border-radius: 12px;
-      padding: 1em;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    h2 {
-      color: #45a29e;
-      font-size: 1.2em;
-      margin-top: 0;
-      border-bottom: 1px solid #45a29e;
-      padding-bottom: 0.5em;
-    }
-    footer {
-      text-align: center;
-      padding: 0.5em;
-      background: #1f2833;
-      color: #45a29e;
-      font-size: 0.9em;
-    }
-    .feed {
-      background: #000;
-      height: 180px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      border-radius: 8px;
-    }
-    .status {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5em;
-    }
-    .status-item {
-      background: #0b0c10;
-      padding: 0.6em;
-      border-radius: 8px;
-      font-size: 0.95em;
-    }
-    .ok { color: #66fcf1; }
-    .warn { color: #f5a623; }
-    .err { color: #ff4d4d; }
-  </style>
-  </head>
- <body>
-  <header>🛰 Mesh Control Dashboard</header>
 
-  <main>
-    <section>
-      <h2>📡 Network Overview</h2>
-     <div id="node-status" class="status">
-  <div class="status-item">Loading...</div>
-</div>
-    </section>
-
-    <section>
-      <h2>🎥 CCTV / Camera Feed</h2>
-      <div class="feed">Feed Unavailable (offline mode)</div>
-    </section>
-
-    <section>
-      <h2>💻 System Info</h2>
-      <div class="status">
-        <div class="status-item">CPU Usage: 14%</div>
-        <div class="status-item">RAM Usage: 1.8GB / 8GB</div>
-        <div class="status-item">Storage Free: 35GB</div>
-        <div class="status-item">Network: Bridged (LAN)</div>
-      </div>
-    </section>
-
-    <section>
-      <h2>🗺 Mesh Map</h2>
-      <div class="feed">[Map Placeholder]</div>
-    </section>
-  </main>
-
-  <footer>Mesh Dashboard v0.1 — Offline Mode</footer>
 </body>
 </html>
+
