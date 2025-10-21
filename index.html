@@ -109,12 +109,9 @@ setInterval(updateNodes, 10000); // refresh every 10 seconds
   <main>
     <section>
       <h2>📡 Network Overview</h2>
-      <div class="status">
-        <div class="status-item ok">Gateway: Online (Dell)</div>
-        <div class="status-item ok">Node 1: Vortex J24 (Connected)</div>
-        <div class="status-item warn">Node 2: Samsung A10e (Weak Signal)</div>
-        <div class="status-item err">Node 3: Offline</div>
-      </div>
+     <div id="node-status" class="status">
+  <div class="status-item">Loading...</div>
+</div>
     </section>
 
     <section>
