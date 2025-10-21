@@ -1,12 +1,12 @@
 <html>
   <head>
-    <script>
-      const password = prompt("Enter password:");
-      if (password !== "ThickThighsUwU69!") {
-        document.write("Access denied.");
-        throw new Error("Wrong password");
-      }
-    </script>
+   <script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("key") !== "ThickThighsUwU69!") {
+    document.write("<h1>Access denied</h1>");
+    throw new Error("Wrong key");
+  }
+</script>
   </head>
   <body>
     <h1>Private Display</h1>
