@@ -6,6 +6,28 @@
     document.write("<h1>Welcome Master</h1>");
     throw new Error("Wrong key");
   }
+     async function updateNodes() {
+  try {
+    const res = await fetch('http://172.30.77.134:5000/nodes.json');
+    const data = await res.json();
+
+    const container = document.querySelector('#node-status');
+    container.innerHTML = ''; // clear previous
+
+    for (let node in data) {
+      const status = data[node];
+      const div = document.createElement('div');
+      div.className = 'status-item ' + (status === "Offline" ? 'err' : status === "Weak Signal" ? 'warn' : 'ok');
+      div.textContent = `${node}: ${status}`;
+      container.appendChild(div);
+    }
+  } catch (e) {
+    console.error("Failed to fetch node status", e);
+  }
+}
+
+updateNodes();
+setInterval(updateNodes, 10000); // refresh every 10 seconds
 </script>
     <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
