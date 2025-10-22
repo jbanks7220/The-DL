@@ -144,18 +144,23 @@ if (password !== "ThickThighsUwU69!") {
 
 <script>
 // ------------------------
+// CONFIG: VM HTTP SERVER IP
+// ------------------------
+const VM_IP = "192.168.1.179"; // Replace with your Kali VM IP
+const FETCH_URL = `http://${VM_IP}:5000/meshdata.json`;
+
+// ------------------------
 // Fetch Mesh Data
 // ------------------------
 async function fetchMeshData() {
   try {
-    const res = await fetch('http://192.168.1.179:5000/meshdata.json');
+    const res = await fetch(FETCH_URL);
     return await res.json();
   } catch (e) {
     console.error("Failed to fetch meshdata.json", e);
     return {messages:{}, devices:{}};
   }
 }
-
 
 // ------------------------
 // Update Network Overview
@@ -203,15 +208,13 @@ async function updateMessages() {
 // ------------------------
 // Leaflet Map Setup
 // ------------------------
-const map = L.map('map').setView([0,0], 2); // global view
+const map = L.map('map').setView([0,0], 2);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-let markers = {}; // device -> marker
-
+let markers = {};
 async function updateMap() {
   const data = await fetchMeshData();
-  // Example: if your meshdata.json contains lat/lon per device, replace this
-  // Here we just place static example markers
+  // Example static locations (replace if your JSON has lat/lon)
   const locations = {
     "Gateway Dell":[37.7749, -122.4194],
     "Vortex J24":[37.7750, -122.4180],
@@ -236,9 +239,10 @@ async function refreshDashboard() {
 }
 
 refreshDashboard();
-setInterval(refreshDashboard, 10000); // every 10 seconds
+setInterval(refreshDashboard, 10000);
 </script>
 
 </body>
 </html>
+
 
