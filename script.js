@@ -1,1 +1,45 @@
-a
+async function loadMeshData() {
+  try {
+    const res = await fetch('/meshdata.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Mesh data not found');
+    const data = await res.json();
+
+    // Messages
+    const msgList = document.getElementById('messages');
+    msgList.innerHTML = '';
+    data.messages.forEach(msg => {
+      const li = document.createElement('li');
+      li.textContent = `${msg.sender}: ${msg.text}`;
+      msgList.appendChild(li);
+    });
+
+    // Devices
+    const devList = document.getElementById('devices');
+    devList.innerHTML = '';
+    data.devices.forEach(dev => {
+      const li = document.createElement('li');
+      li.textContent = `${dev.name} (${dev.ip}) - ${dev.status}`;
+      devList.appendChild(li);
+    });
+
+    // Map
+    if (!window.map) {
+      window.map = L.map('map').setView([37.7749, -122.4194], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
+    }
+    if (window.markers) window.markers.forEach(m => m.remove());
+    window.markers = data.nodes.map(n => {
+      const marker = L.marker([n.lat, n.lng]).addTo(map);
+      marker.bindPopup(`<b>${n.name}</b><br>${n.status}`);
+      return marker;
+    });
+  } catch (err) {
+    console.error('Error loading mesh data:', err);
+  }
+}
+
+// Refresh every 5 seconds
+setInterval(loadMeshData, 5000);
+loadMeshData();
