@@ -148,13 +148,14 @@ if (password !== "ThickThighsUwU69!") {
 // ------------------------
 async function fetchMeshData() {
   try {
-    const res = await fetch('meshdata.json'); // local file in repo
+    const res = await fetch('http://192.168.1.179:5000/meshdata.json');
     return await res.json();
   } catch (e) {
     console.error("Failed to fetch meshdata.json", e);
     return {messages:{}, devices:{}};
   }
 }
+
 
 // ------------------------
 // Update Network Overview
