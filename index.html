@@ -79,6 +79,10 @@
   .err { color: #ff4d4d; }
 
   #map { height: 180px; border-radius: 8px; }
+
+  /* Mesh Messages Panel */
+  #mesh-dashboard { margin-top: 1em; }
+  #mesh-messages { max-height: 150px; overflow-y: auto; padding: 0.5em; background: #0b0c10; border-radius: 8px; }
 </style>
 
 <!-- Password prompt -->
@@ -100,6 +104,12 @@ if (password !== "ThickThighsUwU69!") {
     <h2>📡 Network Overview</h2>
     <div id="node-status" class="status">
       <div class="status-item">Loading...</div>
+    </div>
+
+    <!-- Live Mesh Messages -->
+    <div id="mesh-dashboard">
+      <h3>💬 Live Mesh Messages</h3>
+      <ul id="mesh-messages"></ul>
     </div>
   </section>
 
@@ -160,6 +170,29 @@ async function updateNodes() {
 
 updateNodes();
 setInterval(updateNodes, 10000); // refresh every 10 seconds
+
+// ------------------------
+// Mesh Messages Update
+// ------------------------
+async function updateMeshMessages() {
+  try {
+    const res = await fetch('meshdata.json');
+    const data = await res.json();
+    const messagesUl = document.getElementById('mesh-messages');
+    messagesUl.innerHTML = ''; // clear previous
+
+    for (const [time, msgData] of Object.entries(data.messages)) {
+      const li = document.createElement('li');
+      li.textContent = `[${time}] ${msgData.device}: ${msgData.message}`;
+      messagesUl.appendChild(li);
+    }
+  } catch (e) {
+    console.error("Failed to load mesh messages:", e);
+  }
+}
+
+updateMeshMessages();
+setInterval(updateMeshMessages, 5000); // refresh every 5 seconds
 
 // ------------------------
 // Leaflet Map Setup
