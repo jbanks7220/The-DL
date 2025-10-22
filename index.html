@@ -79,10 +79,6 @@
   .err { color: #ff4d4d; }
 
   #map { height: 180px; border-radius: 8px; }
-
-  /* Mesh Messages Panel */
-  #mesh-dashboard { margin-top: 1em; }
-  #mesh-messages { max-height: 150px; overflow-y: auto; padding: 0.5em; background: #0b0c10; border-radius: 8px; }
 </style>
 
 <!-- Password prompt -->
@@ -105,11 +101,13 @@ if (password !== "ThickThighsUwU69!") {
     <div id="node-status" class="status">
       <div class="status-item">Loading...</div>
     </div>
+  </section>
 
-    <!-- Live Mesh Messages -->
-    <div id="mesh-dashboard">
-      <h3>💬 Live Mesh Messages</h3>
-      <ul id="mesh-messages"></ul>
+  <!-- Live Messages -->
+  <section>
+    <h2>💬 Live Mesh Messages</h2>
+    <div id="messages" class="status">
+      <div class="status-item">Loading messages...</div>
     </div>
   </section>
 
@@ -146,64 +144,98 @@ if (password !== "ThickThighsUwU69!") {
 
 <script>
 // ------------------------
-// Mesh Node Status Update
+// Fetch Mesh Data
+// ------------------------
+async function fetchMeshData() {
+  try {
+    const res = await fetch('meshdata.json'); // local file in repo
+    return await res.json();
+  } catch (e) {
+    console.error("Failed to fetch meshdata.json", e);
+    return {messages:{}, devices:{}};
+  }
+}
+
+// ------------------------
+// Update Network Overview
 // ------------------------
 async function updateNodes() {
-  try {
-    const res = await fetch('http://172.30.77.134:5000/nodes.json');
-    const data = await res.json();
+  const data = await fetchMeshData();
+  const container = document.querySelector('#node-status');
+  container.innerHTML = '';
+  const now = new Date();
 
-    const container = document.querySelector('#node-status');
-    container.innerHTML = ''; // clear previous
+  for (let device in data.devices) {
+    const lastSeen = new Date(data.devices[device]);
+    let statusClass = 'err';
+    let statusText = 'Offline';
+    const diff = (now - lastSeen)/1000; // seconds
 
-    for (let node in data) {
-      const status = data[node];
-      const div = document.createElement('div');
-      div.className = 'status-item ' + (status === "Offline" ? 'err' : status === "Weak Signal" ? 'warn' : 'ok');
-      div.textContent = `${node}: ${status}`;
-      container.appendChild(div);
-    }
-  } catch (e) {
-    console.error("Failed to fetch node status", e);
+    if (diff <= 30) { statusClass='ok'; statusText='Online'; }
+    else if (diff <= 60) { statusClass='warn'; statusText='Weak Signal'; }
+
+    const div = document.createElement('div');
+    div.className = `status-item ${statusClass}`;
+    div.textContent = `${device}: ${statusText}`;
+    container.appendChild(div);
   }
 }
 
-updateNodes();
-setInterval(updateNodes, 10000); // refresh every 10 seconds
-
 // ------------------------
-// Mesh Messages Update
+// Update Live Messages
 // ------------------------
-async function updateMeshMessages() {
-  try {
-    const res = await fetch('meshdata.json');
-    const data = await res.json();
-    const messagesUl = document.getElementById('mesh-messages');
-    messagesUl.innerHTML = ''; // clear previous
+async function updateMessages() {
+  const data = await fetchMeshData();
+  const container = document.querySelector('#messages');
+  container.innerHTML = '';
 
-    for (const [time, msgData] of Object.entries(data.messages)) {
-      const li = document.createElement('li');
-      li.textContent = `[${time}] ${msgData.device}: ${msgData.message}`;
-      messagesUl.appendChild(li);
-    }
-  } catch (e) {
-    console.error("Failed to load mesh messages:", e);
+  const sortedKeys = Object.keys(data.messages).sort();
+  for (let key of sortedKeys) {
+    const msg = data.messages[key];
+    const div = document.createElement('div');
+    div.className = 'status-item ok';
+    div.textContent = `[${key}] ${msg.device}: ${msg.message}`;
+    container.appendChild(div);
   }
 }
-
-updateMeshMessages();
-setInterval(updateMeshMessages, 5000); // refresh every 5 seconds
 
 // ------------------------
 // Leaflet Map Setup
 // ------------------------
-const map = L.map('map').setView([0,0], 2); // default global view
+const map = L.map('map').setView([0,0], 2); // global view
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// Example node markers (replace with your real locations)
-L.marker([37.7749, -122.4194]).addTo(map).bindPopup("Gateway Dell");
-L.marker([37.7750, -122.4180]).addTo(map).bindPopup("Vortex J24");
-L.marker([37.7755, -122.4170]).addTo(map).bindPopup("Samsung A10e");
+let markers = {}; // device -> marker
+
+async function updateMap() {
+  const data = await fetchMeshData();
+  // Example: if your meshdata.json contains lat/lon per device, replace this
+  // Here we just place static example markers
+  const locations = {
+    "Gateway Dell":[37.7749, -122.4194],
+    "Vortex J24":[37.7750, -122.4180],
+    "Samsung A10e":[37.7755, -122.4170]
+  };
+
+  for (let device in locations) {
+    const [lat, lon] = locations[device];
+    if (!markers[device]) {
+      markers[device] = L.marker([lat, lon]).addTo(map).bindPopup(device);
+    }
+  }
+}
+
+// ------------------------
+// Refresh Loop
+// ------------------------
+async function refreshDashboard() {
+  await updateNodes();
+  await updateMessages();
+  await updateMap();
+}
+
+refreshDashboard();
+setInterval(refreshDashboard, 10000); // every 10 seconds
 </script>
 
 </body>
