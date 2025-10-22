@@ -3,178 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mesh Dashboard</title>
+<title>The-DL Dashboard</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background: #f0f2f5;
-    }
-    header {
-        background: #24292e;
-        color: #fff;
-        padding: 1rem;
-        text-align: center;
-    }
-    main {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        padding: 1rem;
-    }
-    section {
-        background: #fff;
-        padding: 1rem;
-        margin: 1rem;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        flex: 1 1 400px;
-    }
-    h2 { margin-top: 0; }
-    #cctv-feed {
-        width: 100%;
-        max-height: 400px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-    canvas {
-        width: 100%;
-        height: 400px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-    #messages {
-        max-height: 200px;
-        overflow-y: scroll;
-        background: #222;
-        color: #0f0;
-        padding: 0.5rem;
-        font-family: monospace;
-        border-radius: 5px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    table, th, td {
-        border: 1px solid #ddd;
-    }
-    th, td { padding: 8px; text-align: left; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #111; color: #eee; }
+    header { padding: 1rem; background: #222; text-align: center; }
+    main { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; }
+    section { background: #222; padding: 1rem; border-radius: 8px; flex: 1 1 300px; min-height: 300px; }
+    #camera-feed { width: 100%; height: 360px; background: #000; }
+    #mesh-map { width: 100%; height: 360px; }
+    #live-messages { max-height: 360px; overflow-y: auto; }
 </style>
 </head>
 <body>
+
 <header>
-    <h1>Mesh Network Dashboard</h1>
+    <h1>The-DL Dashboard</h1>
 </header>
+
 <main>
     <!-- CCTV Feed -->
     <section>
         <h2>CCTV Feed</h2>
-        <video id="cctv-feed" autoplay muted playsinline></video>
+        <img id="camera-feed" src="/camera/" alt="CCTV Feed">
     </section>
 
-    <!-- Mesh Nodes Table -->
-    <section>
-        <h2>Mesh Nodes</h2>
-        <table id="mesh-table">
-            <thead>
-                <tr>
-                    <th>Node</th>
-                    <th>Status</th>
-                    <th>Last Seen</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </section>
-
-    <!-- Mesh Map Visualization -->
+    <!-- Mesh Map -->
     <section>
         <h2>Mesh Map</h2>
-        <canvas id="mesh-map"></canvas>
+        <div id="mesh-map">Loading mesh map...</div>
     </section>
 
     <!-- Live Messages -->
     <section>
         <h2>Live Messages</h2>
-        <div id="messages"></div>
+        <div id="live-messages">Loading messages...</div>
     </section>
 </main>
 
 <script>
-    // CCTV Feed
-    const video = document.getElementById('cctv-feed');
-    video.src = '/camera/';
-    video.onerror = () => console.error('Failed to load CCTV feed.');
-
-    // Mesh Data Table
-    async function loadMeshData() {
-        try {
-            const res = await fetch('/meshdata.json');
-            if (!res.ok) throw new Error('Failed to load meshdata.json');
-            const data = await res.json();
-
-            const tbody = document.querySelector('#mesh-table tbody');
-            tbody.innerHTML = '';
-            data.nodes.forEach(node => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${node.name}</td>
-                    <td>${node.status}</td>
-                    <td>${node.last_seen}</td>
-                `;
-                tbody.appendChild(row);
+document.addEventListener('DOMContentLoaded', () => {
+    // ===== Mesh Map =====
+    const meshMapEl = document.getElementById('mesh-map');
+    const fetchMeshData = () => {
+        fetch('/meshdata.json')
+        .then(res => res.json())
+        .then(data => {
+            meshMapEl.innerHTML = '';
+            const list = document.createElement('ul');
+            data.nodes?.forEach(node => {
+                const li = document.createElement('li');
+                li.textContent = `${node.id}: ${node.status}`;
+                list.appendChild(li);
             });
-
-            // Update mesh map
-            drawMeshMap(data.nodes);
-
-            // Update live messages
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = '';
-            data.messages.forEach(msg => {
-                const p = document.createElement('p');
-                p.textContent = `[${msg.time}] ${msg.node}: ${msg.text}`;
-                messagesDiv.appendChild(p);
-            });
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-        } catch (err) { console.error(err); }
-    }
-
-    setInterval(loadMeshData, 5000);
-    loadMeshData();
-
-    // Mesh Map drawing (basic visualization)
-    const canvas = document.getElementById('mesh-map');
-    const ctx = canvas.getContext('2d');
-
-    function drawMeshMap(nodes) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const radius = Math.min(canvas.width, canvas.height) / 3;
-        const angleStep = (2 * Math.PI) / nodes.length;
-
-        nodes.forEach((node, i) => {
-            const x = centerX + radius * Math.cos(i * angleStep);
-            const y = centerY + radius * Math.sin(i * angleStep);
-
-            // Node circle
-            ctx.beginPath();
-            ctx.arc(x, y, 20, 0, 2 * Math.PI);
-            ctx.fillStyle = node.status === 'online' ? 'green' : 'red';
-            ctx.fill();
-            ctx.stroke();
-
-            // Node label
-            ctx.fillStyle = '#000';
-            ctx.font = '12px Arial';
-            ctx.fillText(node.name, x - 15, y - 25);
+            meshMapEl.appendChild(list);
+        })
+        .catch(err => {
+            meshMapEl.textContent = 'Failed to load mesh map.';
+            console.error(err);
         });
-    }
+    };
+    fetchMeshData();
+    setInterval(fetchMeshData, 5000); // refresh every 5s
+
+    // ===== Live Messages =====
+    const messagesEl = document.getElementById('live-messages');
+    const dummyMessages = [
+        "System initialized",
+        "Node 12 online",
+        "Node 23 offline",
+        "Message received from Node 7"
+    ];
+    let msgIndex = 0;
+    const updateMessages = () => {
+        messagesEl.innerHTML = '';
+        for (let i = 0; i < dummyMessages.length; i++) {
+            const div = document.createElement('div');
+            div.textContent = dummyMessages[(msgIndex + i) % dummyMessages.length];
+            messagesEl.appendChild(div);
+        }
+        msgIndex = (msgIndex + 1) % dummyMessages.length;
+    };
+    updateMessages();
+    setInterval(updateMessages, 3000);
+
+    // ===== CCTV Feed =====
+    const cameraFeed = document.getElementById('camera-feed');
+    cameraFeed.src = '/camera/';
+});
 </script>
+
 </body>
 </html>
-
