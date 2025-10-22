@@ -60,15 +60,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666;
     border-radius: 8px;
     overflow: hidden;
   }
   .feed video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
+    object-fit: cover; /* make video fill the box */
   }
   .status {
     display: flex;
@@ -160,11 +158,11 @@ async function updateNodes() {
     const container = document.querySelector('#node-status');
     container.innerHTML = '';
 
-    if (data.devices) {
-      for (const [device, timestamp] of Object.entries(data.devices)) {
+    if (data.devices && Object.keys(data.devices).length > 0) {
+      for (let node in data.devices) {
         const div = document.createElement('div');
         div.className = 'status-item ok';
-        div.textContent = `${device}: Online (last seen ${timestamp})`;
+        div.textContent = `${node}: Online`;
         container.appendChild(div);
       }
     } else {
@@ -173,8 +171,6 @@ async function updateNodes() {
 
   } catch (e) {
     console.error("Failed to fetch node status", e);
-    const container = document.querySelector('#node-status');
-    container.innerHTML = '<div class="status-item err">Error fetching device data</div>';
   }
 }
 
@@ -189,25 +185,21 @@ async function updateMessages() {
     const container = document.querySelector('#live-messages');
     container.innerHTML = '';
 
-    if (data.messages) {
-      const sortedMessages = Object.entries(data.messages)
-        .sort((a, b) => new Date(b[0]) - new Date(a[0])) // newest first
-        .slice(0, 10);
-
-      for (const [timestamp, msgObj] of sortedMessages) {
+    if (data.messages && Object.keys(data.messages).length > 0) {
+      const keys = Object.keys(data.messages).sort().slice(-10); // last 10 messages
+      keys.reverse().forEach(ts => {
+        const msg = data.messages[ts];
         const div = document.createElement('div');
         div.className = 'status-item ok';
-        div.textContent = `[${timestamp}] ${msgObj.device}: ${msgObj.message}`;
+        div.textContent = `[${ts}] ${msg.device}: ${msg.message}`;
         container.appendChild(div);
-      }
+      });
     } else {
       container.innerHTML = '<div class="status-item warn">No recent messages</div>';
     }
 
   } catch (e) {
     console.error("Failed to fetch messages", e);
-    const container = document.querySelector('#live-messages');
-    container.innerHTML = '<div class="status-item err">Error fetching messages</div>';
   }
 }
 
@@ -217,13 +209,13 @@ async function updateMessages() {
 const map = L.map('map').setView([37.7749, -122.4194], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// Example markers
+// Example markers (customize as needed)
 L.marker([37.7749, -122.4194]).addTo(map).bindPopup("Gateway Dell");
 L.marker([37.7750, -122.4180]).addTo(map).bindPopup("Vortex J24");
-L.marker([37.7755, -122.4170]).addTo(map).bindPopup("Samsung A10e");
+L.marker([37.7755, -122.4170]).bindPopup("Samsung A10e");
 
 // ------------------------
-// Auto-refresh
+// Start auto-refresh
 // ------------------------
 updateNodes();
 updateMessages();
@@ -235,4 +227,3 @@ setInterval(() => {
 
 </body>
 </html>
-
