@@ -3,9 +3,13 @@
     "2025-10-22 01:31:39": {
       "device": "unknown",
       "message": "OoOOh Spongebob I'm finna buss!"
+    },
+    "2025-10-22 01:41:07": {
+      "device": "unknown",
+      "message": "joe mama"
     }
   },
   "devices": {
-    "unknown": "2025-10-22 01:31:39"
+    "unknown": "2025-10-22 01:41:07"
   }
 }
