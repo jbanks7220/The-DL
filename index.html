@@ -114,11 +114,7 @@ if (password !== "ThickThighsUwU69!") {
   <section>
     <h2>🎥 CCTV / Camera Feed</h2>
     <div class="feed">
-      <img 
-  src="http://192.168.1.176:8080/video" 
-  style="width:100%; height:100%; border:none; border-radius:8px;" 
-  alt="CCTV feed not available">
-
+      <img src="https://192.168.1.179:5000/cam.jpg" style="width:100%; height:100%; border:none;" alt="CCTV feed">
     </div>
   </section>
 
@@ -140,61 +136,87 @@ if (password !== "ThickThighsUwU69!") {
   </section>
 </main>
 
-<footer>Mesh Dashboard v0.2 — Live Mode</footer>
+<footer>Mesh Dashboard v0.3 — HTTPS & Live Mode</footer>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-// Fetch and update device and message data
-async function fetchMeshData() {
+// ------------------------
+// Fetch and update nodes
+// ------------------------
+async function updateNodes() {
   try {
-    const response = await fetch('http://192.168.1.179:5000/meshdata.json?_=' + new Date().getTime());
-    const data = await response.json();
+    const res = await fetch('https://192.168.1.179:5000/meshdata.json');
+    const data = await res.json();
 
-    // Update Devices
-    const nodeContainer = document.getElementById("node-status");
-    nodeContainer.innerHTML = "";
-    if (data.devices && Object.keys(data.devices).length > 0) {
+    const container = document.querySelector('#node-status');
+    container.innerHTML = '';
+
+    if (data.devices) {
       for (const [device, lastSeen] of Object.entries(data.devices)) {
-        const div = document.createElement("div");
-        div.className = "status-item ok";
-        div.textContent = `${device}: last seen ${lastSeen}`;
-        nodeContainer.appendChild(div);
+        const div = document.createElement('div');
+        div.className = 'status-item ok';
+        div.textContent = `${device}: Last seen ${lastSeen}`;
+        container.appendChild(div);
       }
     } else {
-      nodeContainer.innerHTML = '<div class="status-item warn">No active devices</div>';
+      container.innerHTML = '<div class="status-item warn">No devices detected</div>';
     }
-
-    // Update Messages
-    const msgContainer = document.getElementById("live-messages");
-    msgContainer.innerHTML = "";
-    if (data.messages && Object.keys(data.messages).length > 0) {
-      const sorted = Object.entries(data.messages).sort((a,b) => new Date(b[0]) - new Date(a[0]));
-      sorted.slice(0,10).forEach(([timestamp, msg]) => {
-        const div = document.createElement("div");
-        div.className = "status-item ok";
-        div.textContent = `[${timestamp}] ${msg.device}: ${msg.message}`;
-        msgContainer.appendChild(div);
-      });
-    } else {
-      msgContainer.innerHTML = '<div class="status-item warn">No recent messages</div>';
-    }
-  } catch (err) {
-    console.error("Error fetching mesh data:", err);
+  } catch (e) {
+    console.error("Failed to fetch node status", e);
+    document.querySelector('#node-status').innerHTML = '<div class="status-item err">Error fetching nodes</div>';
   }
 }
 
-// Leaflet map setup
-const map = L.map('map').setView([37.7749, -122.4194], 13);
+// ------------------------
+// Fetch and update live messages
+// ------------------------
+async function updateMessages() {
+  try {
+    const res = await fetch('https://192.168.1.179:5000/meshdata.json');
+    const data = await res.json();
+
+    const container = document.querySelector('#live-messages');
+    container.innerHTML = '';
+
+    if (data.messages) {
+      const msgs = Object.entries(data.messages).sort((a,b) => new Date(a[0]) - new Date(b[0]));
+      msgs.slice(-10).reverse().forEach(([timestamp, msg]) => {
+        const div = document.createElement('div');
+        div.className = 'status-item ok';
+        div.textContent = `[${timestamp}] ${msg.device}: ${msg.message}`;
+        container.appendChild(div);
+      });
+    } else {
+      container.innerHTML = '<div class="status-item warn">No recent messages</div>';
+    }
+  } catch (e) {
+    console.error("Failed to fetch messages", e);
+    document.querySelector('#live-messages').innerHTML = '<div class="status-item err">Error fetching messages</div>';
+  }
+}
+
+// ------------------------
+// Leaflet Map
+// ------------------------
+const map = L.map('map').setView([0,0], 2);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Example markers (update with real lat/lon)
 L.marker([37.7749, -122.4194]).addTo(map).bindPopup("Gateway Dell");
 L.marker([37.7750, -122.4180]).addTo(map).bindPopup("Vortex J24");
 L.marker([37.7755, -122.4170]).addTo(map).bindPopup("Samsung A10e");
 
-// Initial and periodic updates
-fetchMeshData();
-setInterval(fetchMeshData, 10000);
+// ------------------------
+// Start auto-refresh
+// ------------------------
+updateNodes();
+updateMessages();
+setInterval(() => {
+  updateNodes();
+  updateMessages();
+}, 10000);
 </script>
 
 </body>
