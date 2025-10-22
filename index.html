@@ -1,229 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mesh Control Dashboard</title>
-
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-<style>
-  body {
-    font-family: "Segoe UI", sans-serif;
-    background: #0b0c10;
-    color: #c5c6c7;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  header {
-    background: #1f2833;
-    padding: 1em 2em;
-    text-align: center;
-    color: #66fcf1;
-    font-size: 1.8em;
-    letter-spacing: 1px;
-  }
-  main {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5em;
-    padding: 2em;
-    flex: 1;
-  }
-  section {
-    background: #1f2833;
-    border-radius: 12px;
-    padding: 1em;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  }
-  h2 {
-    color: #45a29e;
-    font-size: 1.2em;
-    margin-top: 0;
-    border-bottom: 1px solid #45a29e;
-    padding-bottom: 0.5em;
-  }
-  footer {
-    text-align: center;
-    padding: 0.5em;
-    background: #1f2833;
-    color: #45a29e;
-    font-size: 0.9em;
-  }
-  .feed {
-    background: #000;
-    height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .feed video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* make video fill the box */
-  }
-  .status {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-  }
-  .status-item {
-    background: #0b0c10;
-    padding: 0.6em;
-    border-radius: 8px;
-    font-size: 0.95em;
-  }
-  .ok { color: #66fcf1; }
-  .warn { color: #f5a623; }
-  .err { color: #ff4d4d; }
-  #map { height: 180px; border-radius: 8px; }
-</style>
-
-<!-- Password prompt -->
-<script>
-const password = prompt("Enter password:");
-if (password !== "ThickThighsUwU69!") {
-  document.write("<h1 style='text-align:center;color:red;'>Access Denied</h1><p style='text-align:center;'>Wrong password</p>");
-  throw new Error("Wrong password");
-}
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesh Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            margin: 1rem;
+            padding: 1rem;
+            width: 400px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        iframe {
+            width: 100%;
+            height: 300px;
+            border: 0;
+        }
+        pre {
+            background: #eee;
+            padding: 0.5rem;
+            overflow-x: auto;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>Mesh Dashboard</h1>
+    </header>
+    <main>
+        <!-- CCTV Feed -->
+        <div class="card">
+            <h2>CCTV Feed</h2>
+            <iframe src="/camera/" allowfullscreen></iframe>
+        </div>
 
-<header>🛰 Mesh Control Dashboard</header>
+        <!-- Mesh Data -->
+        <div class="card">
+            <h2>Mesh Data</h2>
+            <pre id="meshdata">Loading...</pre>
+        </div>
+    </main>
 
-<main>
-  <!-- Mesh Node Status -->
-  <section>
-    <h2>📡 Network Overview</h2>
-    <div id="node-status" class="status">
-      <div class="status-item">Loading...</div>
-    </div>
-  </section>
+    <script>
+        async function loadMeshData() {
+            try {
+                const response = await fetch('https://192.168.1.179/meshdata.json', {cache: "no-cache"});
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                document.getElementById('meshdata').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('meshdata').textContent = `Error loading meshdata.json:\n${err}`;
+            }
+        }
 
-  <!-- Live Messages -->
-  <section>
-    <h2>💬 Live Messages</h2>
-    <div id="live-messages" class="status">
-      <div class="status-item">Waiting for messages...</div>
-    </div>
-  </section>
-
-  <!-- CCTV Feed -->
-  <section>
-    <h2>🎥 CCTV / Camera Feed</h2>
-    <div class="feed">
-      <video src="https://192.168.1.176:8080/video" autoplay muted playsinline></video>
-    </div>
-  </section>
-
-  <!-- System Info -->
-  <section>
-    <h2>💻 System Info</h2>
-    <div class="status">
-      <div class="status-item">CPU Usage: 14%</div>
-      <div class="status-item">RAM Usage: 1.8GB / 8GB</div>
-      <div class="status-item">Storage Free: 35GB</div>
-      <div class="status-item">Network: Bridged (LAN)</div>
-    </div>
-  </section>
-
-  <!-- Mesh Map -->
-  <section>
-    <h2>🗺 Mesh Map</h2>
-    <div id="map"></div>
-  </section>
-</main>
-
-<footer>Mesh Dashboard v0.3 — Live Mode</footer>
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-// ------------------------
-// Update Network Overview
-// ------------------------
-async function updateNodes() {
-  try {
-    const res = await fetch('https://192.168.1.179:5000/meshdata.json');
-    const data = await res.json();
-
-    const container = document.querySelector('#node-status');
-    container.innerHTML = '';
-
-    if (data.devices && Object.keys(data.devices).length > 0) {
-      for (let node in data.devices) {
-        const div = document.createElement('div');
-        div.className = 'status-item ok';
-        div.textContent = `${node}: Online`;
-        container.appendChild(div);
-      }
-    } else {
-      container.innerHTML = '<div class="status-item warn">No devices detected</div>';
-    }
-
-  } catch (e) {
-    console.error("Failed to fetch node status", e);
-  }
-}
-
-// ------------------------
-// Update Live Messages
-// ------------------------
-async function updateMessages() {
-  try {
-    const res = await fetch('https://192.168.1.179:5000/meshdata.json');
-    const data = await res.json();
-
-    const container = document.querySelector('#live-messages');
-    container.innerHTML = '';
-
-    if (data.messages && Object.keys(data.messages).length > 0) {
-      const keys = Object.keys(data.messages).sort().slice(-10); // last 10 messages
-      keys.reverse().forEach(ts => {
-        const msg = data.messages[ts];
-        const div = document.createElement('div');
-        div.className = 'status-item ok';
-        div.textContent = `[${ts}] ${msg.device}: ${msg.message}`;
-        container.appendChild(div);
-      });
-    } else {
-      container.innerHTML = '<div class="status-item warn">No recent messages</div>';
-    }
-
-  } catch (e) {
-    console.error("Failed to fetch messages", e);
-  }
-}
-
-// ------------------------
-// Leaflet Map Setup
-// ------------------------
-const map = L.map('map').setView([37.7749, -122.4194], 13);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-// Example markers (customize as needed)
-L.marker([37.7749, -122.4194]).addTo(map).bindPopup("Gateway Dell");
-L.marker([37.7750, -122.4180]).addTo(map).bindPopup("Vortex J24");
-L.marker([37.7755, -122.4170]).bindPopup("Samsung A10e");
-
-// ------------------------
-// Start auto-refresh
-// ------------------------
-updateNodes();
-updateMessages();
-setInterval(() => {
-  updateNodes();
-  updateMessages();
-}, 10000);
-</script>
-
+        loadMeshData();
+        setInterval(loadMeshData, 5000); // refresh every 5 seconds
+    </script>
 </body>
 </html>
