@@ -3,46 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The-DL Dashboard</title>
+  <title>The DL Dashboard</title>
   <link rel="stylesheet" href="style.css" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-
 <body>
   <header>
-    <h1>The-DL Network Dashboard</h1>
+    <h1>The DL Control Dashboard</h1>
   </header>
 
   <main>
-    <section id="cctv-section">
-      <h2>CCTV Live Feed</h2>
-      <div class="video-container">
-        <img id="cctv-feed" src="/camera/" alt="CCTV Feed Unavailable" />
+    <!-- CCTV Feed -->
+    <section id="cctv-section" class="card">
+      <h2>CCTV Feed</h2>
+      <div id="cctv-container">
+        <img id="cctv-feed" src="http://192.168.1.156:8080/video" alt="Camera feed" />
       </div>
     </section>
 
-    <section id="map-section">
-      <h2>Mesh Network Map</h2>
-      <div id="map"></div>
+    <!-- Mesh Map -->
+    <section id="mesh-section" class="card">
+      <h2>Mesh Map</h2>
+      <div id="mesh-map"></div>
     </section>
 
-    <section id="messages-section">
-      <h2>Live Messages</h2>
-      <ul id="messages"></ul>
+    <!-- Devices List -->
+    <section id="devices-section" class="card">
+      <h2>Devices</h2>
+      <ul id="device-list"></ul>
     </section>
 
-    <section id="devices-section">
-      <h2>Connected Devices</h2>
-      <ul id="devices"></ul>
+    <!-- Messages -->
+    <section id="messages-section" class="card">
+      <h2>Messages</h2>
+      <ul id="messages-list"></ul>
     </section>
   </main>
 
   <footer>
-    <p>© 2025 The-DL Dashboard | Encrypted & Secure</p>
+    <p>© 2025 The DL | Secure Mesh Dashboard</p>
   </footer>
 
   <script src="script.js"></script>
